@@ -51,6 +51,7 @@
         cvcInputSelector: '[name="cc_cvc"]',
         initialValues: {},
         validationState: {},
+        focusOnRender: true,
         strings: {
           hiddenFaceFillPrompt: "<strong>Click here</strong> to <br>fill in the other side.",
           hiddenFaceErrorWarning: "There's a problem on the other side.",
@@ -61,7 +62,7 @@
       this._conformDOM();
       this._bindInputEvents();
       this._importImplicitOptions();
-      this.render();
+      this.render(this.options.focusOnRender);
     }
 
     Skeuocard.prototype._log = function() {
@@ -132,7 +133,9 @@
       this._tabViews.front.hide();
       this._tabViews.back.hide();
       this._inputViews = {
-        number: new this.SegmentedCardNumberInputView(),
+        number: new this.SegmentedCardNumberInputView({
+          focusOnRender: this.options.focusOnRender
+        }),
         exp: new this.ExpirationInputView({
           currentDate: this.options.currentDate
         }),
@@ -395,9 +398,12 @@
     */
 
 
-    Skeuocard.prototype._renderProduct = function(product) {
+    Skeuocard.prototype._renderProduct = function(product, focusOnRender) {
       var destFace, fieldName, focused, view, viewEl, _ref, _ref1,
         _this = this;
+      if (focusOnRender == null) {
+        focusOnRender = true;
+      }
       this._log("[_renderProduct]", "Rendering product:", product);
       this.el.container.removeClass(function(index, css) {
         return (css.match(/\b(product|issuer)-\S+/g) || []).join(' ');
@@ -409,7 +415,7 @@
         this.el.container.addClass("issuer-" + product.attrs.issuerShortname);
       }
       this._setUnderlyingValue('type', (product != null ? product.attrs.companyShortname : void 0) || null);
-      this._inputViews.number.setGroupings((product != null ? product.attrs.cardNumberGrouping : void 0) || [this.options.genericPlaceholder.length]);
+      this._inputViews.number.setGroupings((product != null ? product.attrs.cardNumberGrouping : void 0) || [this.options.genericPlaceholder.length], focusOnRender);
       if (product != null) {
         this._inputViews.exp.reconfigure({
           pattern: (product != null ? product.attrs.expirationFormat : void 0) || "MM/YY"
@@ -463,8 +469,11 @@
       return _results;
     };
 
-    Skeuocard.prototype.render = function() {
-      this._renderProduct(this.product);
+    Skeuocard.prototype.render = function(focusOnRender) {
+      if (focusOnRender == null) {
+        focusOnRender = true;
+      }
+      this._renderProduct(this.product, focusOnRender);
       return this._renderValidation();
     };
 
@@ -638,14 +647,15 @@
       this.optDefaults = {
         value: "",
         groupings: [19],
-        placeholderChar: "X"
+        placeholderChar: "X",
+        focusOnRender: true
       };
       this.options = $.extend({}, this.optDefaults, opts);
       this._state = {
         selectingAll: false
       };
       this._buildDOM();
-      this.setGroupings(this.options.groupings);
+      this.setGroupings(this.options.groupings, this.options.focusOnRender);
     }
 
     SegmentedCardNumberInputView.prototype._buildDOM = function() {
@@ -831,8 +841,11 @@
       return offset + field[0].selectionEnd;
     };
 
-    SegmentedCardNumberInputView.prototype.setGroupings = function(groupings) {
+    SegmentedCardNumberInputView.prototype.setGroupings = function(groupings, focusField) {
       var groupEl, groupLength, _caretPosition, _currentField, _i, _len, _value;
+      if (focusField == null) {
+        focusField = true;
+      }
       _currentField = this._getFocusedField();
       _value = this.getValue();
       _caretPosition = 0;
@@ -854,9 +867,11 @@
       }
       this.options.groupings = groupings;
       this.setValue(_value);
-      _currentField = this._focusFieldForValue([_caretPosition, _caretPosition]);
-      if ((_currentField != null) && _currentField[0].selectionEnd === _currentField[0].maxLength) {
-        return this._focusField(_currentField.next(), 'start');
+      if (focusField === true) {
+        _currentField = this._focusFieldForValue([_caretPosition, _caretPosition]);
+        if ((_currentField != null) && _currentField[0].selectionEnd === _currentField[0].maxLength) {
+          return this._focusField(_currentField.next(), 'start');
+        }
       }
     };
 

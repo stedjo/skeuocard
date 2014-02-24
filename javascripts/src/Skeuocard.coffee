@@ -38,6 +38,7 @@ class Skeuocard
       cvcInputSelector: '[name="cc_cvc"]'
       initialValues: {}
       validationState: {}
+      focusOnRender: true
       strings:
         hiddenFaceFillPrompt: "<strong>Click here</strong> to <br>fill in the other side."
         hiddenFaceErrorWarning: "There's a problem on the other side."
@@ -48,7 +49,7 @@ class Skeuocard
     @_conformDOM()            # conform the DOM, add our elements
     @_bindInputEvents()       # bind input and interaction events
     @_importImplicitOptions() # import init options from DOM element attrs
-    @render()                 # perform initial render
+    @render(@options.focusOnRender)   # perform initial render
 
   # Debugging helper; if debug is set to true at instantiation, messages will 
   # be printed to the console.
@@ -102,7 +103,7 @@ class Skeuocard
     @_tabViews.back.hide()
     # Create new input views, attach them to the appropriate surfaces
     @_inputViews =
-      number: new @SegmentedCardNumberInputView()
+      number: new @SegmentedCardNumberInputView({focusOnRender:@options.focusOnRender})
       exp:    new @ExpirationInputView(currentDate: @options.currentDate)
       name:   new @TextInputView(class: "cc-name", placeholder: "YOUR NAME")
       cvc:    new @TextInputView(class: "cc-cvc", placeholder: "XXX", requireMaxLength: true)
@@ -331,7 +332,7 @@ class Skeuocard
   Assert rendering changes necessary for the current product. Passing a null 
   value instead of a product will revert the card to a generic state.
   ###
-  _renderProduct: (product)->
+  _renderProduct: (product, focusOnRender = true)->
     @_log("[_renderProduct]", "Rendering product:", product)
 
     # remove existing product and issuer classes (destyling product)
@@ -346,7 +347,7 @@ class Skeuocard
     @_setUnderlyingValue('type', product?.attrs.companyShortname || null)
     # reconfigure the number input groupings
     @_inputViews.number.setGroupings(product?.attrs.cardNumberGrouping || 
-                                     [@options.genericPlaceholder.length])
+                                     [@options.genericPlaceholder.length], focusOnRender)
     if product?
       # reconfigure the expiration input groupings
       @_inputViews.exp.reconfigure
@@ -384,8 +385,8 @@ class Skeuocard
       @_updateValidation(fieldName, fieldView.getValue())
 
   # Update the card's visual representation to reflect internal state.
-  render: ->
-    @_renderProduct(@product)
+  render: (focusOnRender = true) ->
+    @_renderProduct(@product,focusOnRender)
     @_renderValidation()
     # @_flipToInvalidSide()
 

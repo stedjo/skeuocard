@@ -26,11 +26,12 @@ class Skeuocard::SegmentedCardNumberInputView
       value: ""
       groupings: [19]
       placeholderChar: "X"
+      focusOnRender: true
     @options = $.extend({}, @optDefaults, opts)
     @_state =
       selectingAll: false     # indicates whether the field is in "select all"
     @_buildDOM()
-    @setGroupings(@options.groupings)
+    @setGroupings(@options.groupings, @options.focusOnRender)
 
   _buildDOM: ->
     @el = $('<fieldset>')
@@ -190,7 +191,7 @@ class Skeuocard::SegmentedCardNumberInputView
     offset += len for len, i in @options.groupings when i < groupingIndex
     return offset + field[0].selectionEnd
 
-  setGroupings: (groupings)->
+  setGroupings: (groupings, focusField = true)->
     # store the value and current caret position so we can reapply it
     _currentField = @_getFocusedField()
     _value = @getValue()
@@ -210,9 +211,10 @@ class Skeuocard::SegmentedCardNumberInputView
       @el.append(groupEl)
     @options.groupings = groupings
     @setValue(_value)
-    _currentField = @_focusFieldForValue([_caretPosition, _caretPosition])
-    if _currentField? and _currentField[0].selectionEnd is _currentField[0].maxLength
-      @_focusField(_currentField.next(), 'start')
+    if focusField == true
+      _currentField = @_focusFieldForValue([_caretPosition, _caretPosition])
+      if _currentField? and _currentField[0].selectionEnd is _currentField[0].maxLength
+        @_focusField(_currentField.next(), 'start')
 
   _focusFieldForValue: (place)->
     value = @getValue()
